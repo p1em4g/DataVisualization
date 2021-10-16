@@ -15,12 +15,12 @@ def showDatabases(): #возвращает список с базами данн
     cursor = connection.cursor()
     cursor.execute("show databases;")
     databases = [ item[0] for item in cursor.fetchall()]
-    experiments = [];
+    experiments = []
     for i in range(len(databases)-1,-1,-1):
         if "experiment" in databases[i]:
             experiments.append(databases[i])
     cursor.close()
-    return experiments;
+    return experiments
 
 def databaseConnecting(databaseName):           #подключаемся к указанной БД и сразу просим
     cursor = connection.cursor()
@@ -61,7 +61,7 @@ def pointStartEnd(point_id : str):                    #возвращает вр
     cursor.close()
     return startTime[0][0],endTime[0][0]
 
-def getSensorData(sensor_id : str, startTime : datetime.datetime, endTime : datetime.datetime):      #получаем данные за указанный период времени (и само время) с указанного датчика
+def getSensorData(sensor_id : str, startTime, endTime):      #получаем данные за указанный период времени (и само время) с указанного датчика
     cursor = connection.cursor()
     # print("select time, data from raw_data where sensor_id = '{0}' and time > '{1}' and time < '{2}';".format(sensor_id,startTime,endTime))
     cursor.execute("select time, data from raw_data where sensor_id = '{0}' and time > '{1}' and time < '{2}';".format(sensor_id,startTime,endTime))

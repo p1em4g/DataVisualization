@@ -3,11 +3,12 @@ import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output, State
 import mySQL_query
+from maths_F import approximation
 from sensors import sensors
 ##############################3
 experiments = mySQL_query.showDatabases()             # просим список экспериментов, чтобы потом сделать dropdown
 ##########################33
-# data = [[1,2,3],[1,2,3]]
+# data = [[1,2,3],[3,1,2]]
 # experiments = [0, 1, 2]
 # points_1 = ["1","11","111"]
 # points_2 = ["2","22","222","2222"]
@@ -75,11 +76,54 @@ app.layout = html.Div([
             value=[],
             style={'margin-top':'2%'}
         ),
+########################################################################################################approx
+        html.Div(children=[
+            dcc.Checklist(
+                id = "approximateChecklist",
+                options=[
+                    {'label': 'approximation (kx+b)', 'value': "approxVisible"}
+                ],
+                value=[]
+            ),
+            html.Div(children=[
+                dcc.Input(                              #approximation starttime input
+                    id="approxStartTimeInput",
+                    placeholder='Start time (approximation)',
+                    type='text',
+                    style = {'width': '97%','margin-top':'2%'}
+                ),
+                dcc.Input(                                                                           # approximation endtime input
+                    id="approxEndTimeInput",
+                    placeholder='End time (approximation)',
+                    type='text',
+                    style={'width': '97%', 'margin-top': '2%'}
+                ),
+            ], id = "aproxHiddenDiv", hidden= True)
+
+        ], style = {'background-color': 'white','border':'1px solid gray','border-radius': '2px', 'margin-top':'2%'}),
+#############################################################################################################################33
 
         html.Button('Update', id='updateButton', n_clicks=0, style = {'width': '100%', 'margin-top':'4%', 'height':'30px'}),
     ], style={'width': '16%'}),
 
 
+    # html.Div(children = [                                                             !!!УДАЛИТЬ!!!
+    #     dcc.Graph(                                                                      #строим график и кладем в чилдрен
+    #         figure = dict(
+    #             data = [
+    #                 dict(
+    #                     x = data[0],
+    #                     y = data[1]
+    #                 ),
+    #                 dict(
+    #                     x = data[1],
+    #                     y = data[0]
+    #                 )
+    #             ],
+    #             layout={'title': 'Approximation (CO2)'}                   #подпись графика
+    #         )
+    #     )
+    # ]),
 
     html.Div(id = "graphs", style={'width': '83%', 'left':'17%','top':'0%', 'position': 'absolute'}),  # div в который вернуться графики с колбека
 
@@ -105,7 +149,6 @@ def selectPoints(selectedExperiment):
     return options
 
 
-
 @app.callback(                                                    #callback который заполняет поля со временем по выбранной точке из exp_data.
     Output("startTimeInput","value"),
     Output("endTimeInput","value"),
@@ -119,30 +162,53 @@ def selectPoint(selectedPoint):
     return StartEndTime[0],StartEndTime[1]
 
 
-
 @app.callback(
+    Output("aproxHiddenDiv","hidden"),
+    Input("approximateChecklist","value")
+)
+###########################################33 колбек для меню апроксимации
+def showProp(checklistValue):
+    if ("approxVisible" in checklistValue):
+        return False
+    else:
+        return True
+#########################
+@app.callback(                                          # колбек для графиков
     Output('graphs','children'),
     Input("updateButton", "n_clicks"),
     State("graphDropdown", "value"),
     State("startTimeInput", "value"),
     State("endTimeInput", "value"),
+    # State("approximateChecklist","value")
 
 )
 def createGraphs(n_clicks,selectedSensors,startTime,endTime):
     Data = []
     for i in range(0,len(selectedSensors)):                                                     #формируем массив данных
         Data.append(mySQL_query.getSensorData(selectedSensors[i], startTime, endTime))
-    children = [dcc.Graph(                                                                      #строим график и кладем в чилдрен
-        figure = dict(
-            data = [
-                dict(
-                    x = Data[i][0],
-                    y = Data[i][1]
-                )
-            ],
-            layout={'title': '{0}'.format(sensors[int(selectedSensors[i])-1][1])}                   #подпись графика
-        )
-    ) for i in range(0,len(selectedSensors))]                                           #циклим по кл-ву выбранных сенсоров
+        ################################################ approximation
+    approx_y = []
+    for i in range(0,len(selectedSensors)):
+        approx_y.append(approximation(Data[i]))
+        #########################################33
+    children = [
+        dcc.Graph(                                                                      #строим график и кладем в чилдрен
+            figure = dict(
+                data = [
+                    dict(
+                        x = Data[i][0],
+                        y = Data[i][1]
+                    ),
+                    #################################approximation
+                    dict(
+                        x=Data[i][0],
+                        y=approx_y[i]
+                    ),
+                    ###############################
+                ],
+                layout={'title': '{0}'.format(sensors[int(selectedSensors[i])-1][1])}                   #подпись графика
+            )
+        ) for i in range(0,len(selectedSensors))]                                           #циклим по кл-ву выбранных сенсоров
     return children
 
 
