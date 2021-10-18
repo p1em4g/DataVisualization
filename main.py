@@ -1,6 +1,7 @@
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
+import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 import mySQL_query
 from maths_F import approximation
@@ -98,38 +99,28 @@ app.layout = html.Div([
                     type='text',
                     style={'width': '97%', 'margin-top': '2%'}
                 ),
+                html.Button('Approximation', id ='approxUpdateButton', n_clicks = 0, style = {'width': '100%', 'margin-top':'4%', 'height':'30px'} ),
             ], id = "aproxHiddenDiv", hidden= True)
 
         ], style = {'background-color': 'white','border':'1px solid gray','border-radius': '2px', 'margin-top':'2%'}),
 #############################################################################################################################33
 
         html.Button('Update', id='updateButton', n_clicks=0, style = {'width': '100%', 'margin-top':'4%', 'height':'30px'}),
+
+
+##################################################                !!!УДАЛИТЬ!!! (тестовая штука)
+
+
+#################################################
+
     ], style={'width': '16%'}),
 
 
-    # html.Div(children = [                                                             !!!УДАЛИТЬ!!!
-    #     dcc.Graph(                                                                      #строим график и кладем в чилдрен
-    #         figure = dict(
-    #             data = [
-    #                 dict(
-    #                     x = data[0],
-    #                     y = data[1]
-    #                 ),
-    #                 dict(
-    #                     x = data[1],
-    #                     y = data[0]
-    #                 )
-    #             ],
-    #             layout={'title': 'Approximation (CO2)'}                   #подпись графика
-    #         )
-    #     )
-    # ]),
 
     html.Div(id = "graphs", style={'width': '83%', 'left':'17%','top':'0%', 'position': 'absolute'}),  # div в который вернуться графики с колбека
 
 
 ],)
-
 
 
 
@@ -179,35 +170,22 @@ def showProp(checklistValue):
     State("graphDropdown", "value"),
     State("startTimeInput", "value"),
     State("endTimeInput", "value"),
-    # State("approximateChecklist","value")
+    State("approximateChecklist","value")
 
 )
-def createGraphs(n_clicks,selectedSensors,startTime,endTime):
-    Data = []
-    for i in range(0,len(selectedSensors)):                                                     #формируем массив данных
-        Data.append(mySQL_query.getSensorData(selectedSensors[i], startTime, endTime))
+def createGraphs(n_clicks,selectedSensors,startTime,endTime, approxtrue):
+    Figures = []
+    for sensor in selectedSensors:                                                     #формируем массив из fig (графики по разным сенсорам)
+        data = mySQL_query.getSensorData(sensor, startTime, endTime)
+        fig = go.Figure(go.Scatter(x = data[0], y = data[1]))
+        ##############################################3approx
+        if 'approxVisible' in approxtrue:
+            fig.add_trace(go.Scatter(x = data[0], y = approximation(data)))
+        Figures.append(fig)
         ################################################ approximation
-    approx_y = []
-    for i in range(0,len(selectedSensors)):
-        approx_y.append(approximation(Data[i]))
-        #########################################33
     children = [
         dcc.Graph(                                                                      #строим график и кладем в чилдрен
-            figure = dict(
-                data = [
-                    dict(
-                        x = Data[i][0],
-                        y = Data[i][1]
-                    ),
-                    #################################approximation
-                    dict(
-                        x=Data[i][0],
-                        y=approx_y[i]
-                    ),
-                    ###############################
-                ],
-                layout={'title': '{0}'.format(sensors[int(selectedSensors[i])-1][1])}                   #подпись графика
-            )
+            figure = Figures[i]
         ) for i in range(0,len(selectedSensors))]                                           #циклим по кл-ву выбранных сенсоров
     return children
 
