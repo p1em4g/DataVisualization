@@ -1,3 +1,5 @@
+import datetime
+
 import numpy as np
 # import mySQL_query
 # import plotly.graph_objects as go
@@ -8,29 +10,69 @@ import numpy as np
 # data = mySQL_query.getSensorData('3', '2021-08-03 23:27:22', '2021-08-03 23:30:22')
 # print(data)
 
+def strToDatetime(datetimeStr): #переводит строку формата "2021-08-04T04:12:30" в datetime
+    try:
+        year =''
+        for i in range(0,4):
+            year = year + datetimeStr[i]
+
+        month =''
+        for i in range(5,7):
+            month=month+datetimeStr[i]
+
+        day =''
+        for i in range(8,10):
+            day = day + datetimeStr[i]
+
+        hour =''
+        for i in range(11,13):
+            hour = hour + datetimeStr[i]
+
+        minute = ""
+        for i in range(14,16):
+            minute=minute+datetimeStr[i]
+
+        second = ''
+        for i in range(17,19):
+            second = second + datetimeStr[i]
+
+        DT = datetime.datetime(year = int(year),month = int(month), day = int(day), hour = int(hour), minute = int(minute), second = int(second))
+        return DT
+    except:
+        return None
 
 
-def approximation(data):
-    y = np.array(data[1])
-    startTime = data[0][0]
-    x = []
-    for i in range(0, len(data[0])):
-        x.append((data[0][i] - startTime).total_seconds())
-    x = np.array(x)
-    approxCoef = np.polyfit(x, y, 1)
-    Approx_Y = []
-    for x1 in x:
-        Approx_Y.append(approxCoef[0]*x1+approxCoef[1])
-    return Approx_Y
+def approximation(data,polyDegree):#работает при степени полинома <=3
+    if data[1] != []:
+        y = np.array(data[1])
+        startTime = data[0][0]
+        x = []
+        for i in range(0, len(data[0])):
+            x.append((data[0][i] - startTime).total_seconds())
+        x = np.array(x)
+        approxCoef = np.polyfit(x, y, polyDegree)
 
-# y1 = approximation(data)
-#
+        coef_2 = []                           # coef_2 сделан чтобы добавить вначало нули, для случае, когда степень полинома не равна 3. чтобы унифицировать составление Approx_Y
+        for i in range(0,(4-len(approxCoef))):
+            coef_2.append(0)
+        for i in range(0,len(approxCoef)): #добавляем коэффициенты после нулей
+            coef_2.append(approxCoef[i])
+
+        Approx_Y = []
+        for x1 in x:
+            Approx_Y.append(coef_2[0]*(x1**3) + coef_2[1]*(x1**2) + coef_2[2]*x1+coef_2[3])
+        return Approx_Y
+    else:
+        return data[1]
+
+
+# y1 = approximation(data,1)
 # fig = go.Figure()
 # fig.add_trace(go.Scatter(x = data[0], y = data[1]))
 # fig.add_trace(go.Scatter(x=data[0], y=y1))
 # fig.show()
-
-
+#
+#
 # mySQL_query.connectionClose()
 
 
