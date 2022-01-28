@@ -1,6 +1,6 @@
 import dash
-import dash_html_components as html
-import dash_core_components as dcc
+from dash import html
+from dash import dcc
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 import datetime
@@ -242,7 +242,7 @@ def createGraphs(n_clicks,selectedSensors,startTime,endTime, approxtrue, approxS
         fig.update_layout(legend_orientation="h",
                           margin=dict(l=0, r=0, t=0, b=0),
                           xaxis_title='Time',
-                          yaxis_title=sensors[int(sensor)-1][1],)
+                          yaxis_title=sensors[int(sensor)-1][1])
         Figures.append(fig)
         ################################################ approximation
     children = [

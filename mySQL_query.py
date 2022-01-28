@@ -11,10 +11,22 @@ connection = pymysql.connect(
 print("случилось подключение")
 cursor = connection.cursor()
 
+
+# def query(queryList):
+#     cursor = connection.cursor()
+#     data = []
+#     for x in queryList:
+#         cursor.execute(x)
+#         if "select" in x or 'show in x':
+#             data.append(cursor.fetchall())
+#     cursor.close()
+#     return data
+
+
 def showDatabases(): #возвращает список с базами данных, начинающихся как "experiment"
     cursor = connection.cursor()
     cursor.execute("show databases;")
-    databases = [ item[0] for item in cursor.fetchall()]
+    databases = [item[0] for item in cursor.fetchall()]
     experiments = []
     for i in range(len(databases)-1,-1,-1):
         if "experiment" in databases[i]:
@@ -79,16 +91,19 @@ def connectionClose():
 
 
 
-# print(showDatabases())
-#
+# # print(showDatabases())
+# #
 # a = databaseConnecting("experiment23")
-# print (a)
-#
-# # b = selectData("2021-08-07 03:12:53","2021-08-07 03:15:53")
-# # print(b)
-# # print(b[0][0][2])
-#
+# # print (a)
+# #
+# # # b = selectData("2021-08-07 03:12:53","2021-08-07 03:15:53")
+# # # print(b)
+# # # print(b[0][0][2])
+# #
 # print(getSensorData(3,"2021-08-07 03:12:53", "2021-08-07 03:15:53"))
+# #
+# # print(pointStartEnd(327))
 #
-# print(pointStartEnd(327))
-
+#
+# a = query(["show databases;",'use experiment23','select point_id from exp_data'])
+# print (a)
