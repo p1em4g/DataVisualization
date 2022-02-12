@@ -1,5 +1,5 @@
 import pymysql
-import datetime
+# import datetime
 from userData import host, user, password
 
 

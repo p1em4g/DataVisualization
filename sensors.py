@@ -9,6 +9,9 @@ sensors = [
     ['8','8. ds18b20_e54f (ds18b20_e54f)'],
 ]
 
+
+node_adress = 'tcp://10.9.0.23:5566' # временное решение не более чем на несколько лет
+
 # {'label': '1. Temperature (bmp180_temp)', 'value': '1'},  # bmp180_temp - 1
 # {'label': '2. Pressure (bmp180_pressure)', 'value': '2'},  # bmp180_pressure - 2
 # {'label': '3. CO2 (raw_co2)', 'value': '3'},  # raw_co2 - 3
