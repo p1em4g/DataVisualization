@@ -9,13 +9,29 @@ import mySQL_query
 from maths_F import approximation
 from sensors import sensors
 
+import json
+
 import dash_bootstrap_components as dbc
 
 from graph_tab import  graph_tab
 from cont_tab import cont_tab
 
+from plexus.utils.console_client_api import PlexusUserApi
+from plexus.nodes.message import Message
 
 
+
+
+###############################
+list_of_nodes1 = [
+        {"name": "node1", "address": "tcp://10.9.0.23:5566"}
+        ]
+client_addr = "tcp://10.9.0.7:5565"
+stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
+message = Message(addr="node1", device ='node1', command='info')
+addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
+
+#############################
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -144,7 +160,67 @@ def createGraphs(n_clicks,selectedSensors,startTime,endTime, approxtrue, approxS
         ) for i in range(0,len(selectedSensors))]                                           #циклим по кл-ву выбранных сенсоров
     return children
 
-# Control Page 2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222
+# # Control Page 2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+@app.callback(
+    Output('device_dropdown','options'),
+    Input("connect_button", "n_clicks"),
+)
+def get_device(n_clicks):
+    options = [
+        {'label': x, 'value': x} for x in decoded_resp_['data']['devices']
+    ]
+    return options
+
+
+@app.callback(
+    Output('command_dropdown','options'),
+    Input("device_dropdown", "value"),
+)
+def get_device(device_dropdown_value):
+    if device_dropdown_value != None:
+        options = [
+            {'label': x, 'value': x} for x in decoded_resp_['data']['devices'][device_dropdown_value]['commands']
+        ]
+        return options
+
+@app.callback(
+    Output('command_arguments_input','value'),
+    Input("device_dropdown", "value"),
+    Input("command_dropdown", "value"),
+)
+def get_device(device_dropdown_value, command):
+    if device_dropdown_value != None and command != None:
+        if decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs'] == None:
+            command_arguments_str = 'None'
+        else:
+            command_arguments_str = "{0}\"{1}\": #{2}".format('{',str(list((decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs']).keys())[0]),'}')
+            # command_arguments_str = str(list((decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs']).keys())[0])
+        return command_arguments_str
+
+@app.callback(
+    Output('output_textarea','value'),
+    Input("send_button", "n_clicks"),
+    State('device_dropdown','value'),
+    State("command_dropdown", "value"),
+    State('command_arguments_input', "value")
+)
+def send_message(n_clicks, device, command, arguments: str):
+    try:
+        if arguments == 'None' or arguments == None:
+            data = None
+        else:
+            data = json.loads(arguments)
+        message = Message(addr="node1", device=device, command=command, data = data)
+        node_answer_raw = stend_control.send_msg(message)
+        node_addres, node_answer = Message.parse_zmq_msg(node_answer_raw)
+        return str(node_answer)
+    except:
+        return 'send message error'
+
+
+try:
+    if __name__ == '__main__':
+        app.run_server(debug=False)
+finally:
+    mySQL_query.connectionClose()

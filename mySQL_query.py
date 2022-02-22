@@ -1,7 +1,12 @@
+import json
+import random
+
 import pymysql
 # import datetime
 from userData import host, user, password
 
+from plexus.utils.console_client_api import PlexusUserApi
+from plexus.nodes.message import Message
 
 
 connection = pymysql.connect(
@@ -22,6 +27,42 @@ cursor = connection.cursor()
 #     cursor.close()
 #     return data
 
+
+
+######################################### tab2
+def get_decoded_resp():
+    list_of_nodes1 = [
+        {"name": "node1", "address": "tcp://10.9.0.23:5566"}
+        ]
+    client_addr = "tcp://10.9.0.7:556{0}".format(random.randint(1,9))
+    try:
+        stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
+        message = Message(addr="node1", device ='node1', command='info')
+        addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
+        return  decoded_resp_
+    except:
+        return get_decoded_resp()
+
+def send_message(device, command, arguments):
+    # try:
+    list_of_nodes1 = [
+        {"name": "node1", "address": "tcp://10.9.0.23:5566"}
+    ]
+    client_addr = "tcp://10.9.0.7:5556"
+    stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
+    print(device)
+    print(command)
+    print(arguments)
+    if arguments == None:
+        data = None
+    else:
+        data = json.loads(arguments)
+
+    message = Message(addr="node1", device=device, command=command, data = data)
+    return stend_control.send_msg(message)
+    # except:
+    #     return 'send message error'
+####################################3##### tab2 end
 
 def showDatabases(): #возвращает список с базами данных, начинающихся как "experiment"
     cursor = connection.cursor()
@@ -90,6 +131,8 @@ def connectionClose():
     print("соединение тоже всё")
 
 
+
+# print(get_decoded_resp())
 
 # # print(showDatabases())
 # #
