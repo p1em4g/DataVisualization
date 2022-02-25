@@ -24,11 +24,11 @@ from plexus.nodes.message import Message
 
 ###############################
 list_of_nodes1 = [
-        {"name": "node1", "address": "tcp://10.9.0.23:5566"}
+        {"name": "node2", "address": "tcp://10.9.0.12:5567"}
         ]
-client_addr = "tcp://10.9.0.7:5565"
+client_addr = "tcp://10.9.0.7:5555"         # мой адресс
 stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
-message = Message(addr="node1", device ='node1', command='info')
+message = Message(addr="node2", device ='node2', command='info')
 addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
 
 #############################
@@ -211,7 +211,7 @@ def send_message(n_clicks, device, command, arguments: str):
             data = None
         else:
             data = json.loads(arguments)
-        message = Message(addr="node1", device=device, command=command, data = data)
+        message = Message(addr="node2", device=device, command=command, data = data)
         node_answer_raw = stend_control.send_msg(message)
         node_addres, node_answer = Message.parse_zmq_msg(node_answer_raw)
         return str(node_answer)
