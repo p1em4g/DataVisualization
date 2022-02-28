@@ -22,16 +22,8 @@ from plexus.nodes.message import Message
 
 
 
-###############################
-list_of_nodes1 = [
-        {"name": "node2", "address": "tcp://10.9.0.12:5567"}
-        ]
-client_addr = "tcp://10.9.0.7:5555"         # мой адресс
-stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
-message = Message(addr="node2", device ='node2', command='info')
-addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
+#
 
-#############################
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -41,7 +33,6 @@ app.layout = html.Div([
         dbc.Tab(cont_tab, label='ControlPanel')
     ])
 ])
-
 
 
 # Graph Page Callbacks 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
@@ -219,8 +210,34 @@ def send_message(n_clicks, device, command, arguments: str):
         return 'send message error'
 
 
-try:
-    if __name__ == '__main__':
-        app.run_server(debug=False)
-finally:
-    mySQL_query.connectionClose()
+
+if __name__ == "__main__":
+
+    ##############################
+    list_of_nodes1 = [
+        {"name": "node1", "address": "tcp://10.9.0.23:5566"},
+        {"name": "node2", "address": "tcp://10.9.0.12:5567"}
+    ]
+    client_addr = "tcp://10.9.0.1:5565"  # мой адресс
+    stend_control = PlexusUserApi(endpoint=client_addr, name="client", list_of_nodes=list_of_nodes1)
+    # message = stend_control.user_input_parse(
+    # addr="tcp://10.9.0.12:5567", node="node2", device="node2", command="info", raw_args="{0}\"{1}\": 10{2}".format("{", "arg", "}")
+    # )
+    # res = stend_control.send_msg(message)
+    addr_decoded_, decoded_resp_ = stend_control.get_full_node_info("node2")
+    # message = Message(addr="node2", device ='node2', command='info')
+    print(addr_decoded_)
+    print(decoded_resp_)
+    # addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(res)
+
+    #############################
+
+
+
+
+
+    try:
+        if __name__ == '__main__':
+            app.run_server(host="10.9.0.1", port=8050, debug=False)
+    finally:
+        mySQL_query.connectionClose()
