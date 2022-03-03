@@ -23,13 +23,13 @@ from plexus.nodes.message import Message
 
 
 ###############################
-list_of_nodes1 = [
-        {"name": "node2", "address": "tcp://10.9.0.12:5567"}
-        ]
-client_addr = "tcp://10.9.0.7:5555"         # мой адресс
-stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
-message = Message(addr="node2", device ='node2', command='info')
-addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
+# list_of_nodes1 = [
+#         {"name": "node2", "address": "tcp://10.9.0.12:5567"}
+#         ]
+# client_addr = "tcp://10.9.0.7:5555"         # мой адресс
+# stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
+# message = Message(addr="node2", device ='node2', command='info')
+# addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
 
 #############################
 
@@ -186,13 +186,14 @@ def get_device(device_dropdown_value):
 
 @app.callback(
     Output('command_arguments_input','value'),
-    Input("device_dropdown", "value"),
+    # Inpuy("device_dropdown", "value"),
     Input("command_dropdown", "value"),
+    State("device_dropdown", "value"),
 )
-def get_device(device_dropdown_value, command):
+def get_device(command,device_dropdown_value, ):
     if device_dropdown_value != None and command != None:
         if decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs'] == None:
-            command_arguments_str = 'None'
+            command_arguments_str = "None"
         else:
             command_arguments_str = "{0}\"{1}\": #{2}".format('{',str(list((decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs']).keys())[0]),'}')
             # command_arguments_str = str(list((decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs']).keys())[0])
@@ -207,20 +208,30 @@ def get_device(device_dropdown_value, command):
 )
 def send_message(n_clicks, device, command, arguments: str):
     try:
-        if arguments == 'None' or arguments == None:
-            data = None
-        else:
-            data = json.loads(arguments)
-        message = Message(addr="node2", device=device, command=command, data = data)
-        node_answer_raw = stend_control.send_msg(message)
-        node_addres, node_answer = Message.parse_zmq_msg(node_answer_raw)
-        return str(node_answer)
+        if device != None and command != None and arguments != None:
+            if arguments == 'None' or arguments == None:
+                data = None
+            else:
+                data = json.loads(arguments)
+            message = Message(addr="node2", device=device, command=command, data = data)
+            node_answer_raw = stend_control.send_msg(message)
+            node_addres, node_answer = Message.parse_zmq_msg(node_answer_raw)
+            return str(node_answer)
     except:
         return 'send message error'
 
 
-try:
-    if __name__ == '__main__':
-        app.run_server(debug=False)
-finally:
-    mySQL_query.connectionClose()
+if __name__ == '__main__':
+    list_of_nodes1 = [
+        {"name": "node2", "address": "tcp://10.9.0.12:5567"}
+    ]
+    client_addr = "tcp://10.9.0.7:5567"  # мой адресс
+    stend_control = PlexusUserApi(endpoint=client_addr, name="client", list_of_nodes=list_of_nodes1)
+    addr_decoded_, decoded_resp_ = stend_control.get_full_node_info("node2")
+    # message = Message(addr="node2", device='node2', command='info')
+    # addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
+    try:
+        if __name__ == '__main__':
+            app.run_server(debug=False)
+    finally:
+        mySQL_query.connectionClose()
