@@ -3,7 +3,7 @@ import random
 
 import pymysql
 # import datetime
-from userData import host, user, password
+from config import host, user, password
 
 from plexus.utils.console_client_api import PlexusUserApi
 from plexus.nodes.message import Message

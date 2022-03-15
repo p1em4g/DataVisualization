@@ -2,6 +2,8 @@ import dash_bootstrap_components as dbc
 from dash import html
 from dash import dcc
 
+from config import address_and_nodes
+
 
 
 cont_tab = html.Div([
@@ -9,7 +11,7 @@ cont_tab = html.Div([
 
         dbc.Row([
             dbc.Col(html.Div([
-                dbc.InputGroup([dbc.InputGroupText("ip"), dbc.Input(placeholder="address")])
+                dbc.InputGroup([dbc.InputGroupText("ip"), dbc.Input(id = "connect_input",placeholder="address")])
             ]),width=3),
             dbc.Col(html.Div([dbc.Button("CONNECT",id = 'connect_button', color="success", className="me-1")]),width=1),
             dbc.Col(html.Div([dbc.Button("DISCONNECT", color="danger", className="me-1")]), width=1),
@@ -27,11 +29,9 @@ cont_tab = html.Div([
                         dbc.Select(
                             id = 'address_dropdown',
                             options=[
-                                {"label": "Option 1", "value": 1},
-                                {"label": "Option 2", "value": 2},
+                                {"label": x, "value": x} for x in address_and_nodes
                             ]
                         ),
-
                     ]
                 ),
             ]),width=2),
@@ -41,12 +41,9 @@ cont_tab = html.Div([
                     [
                         dbc.InputGroupText("Node"),
                         dbc.Select(
-                            options=[
-                                {"label": "Option 1", "value": 1},
-                                {"label": "Option 2", "value": 2},
-                            ]
+                            id = "node_dropdown",
+                            # options=[{"label": "Option 1", "value": 1},{"label": "Option 2", "value": 2},]
                         ),
-
                     ]
                 ),
             ]),width=2),

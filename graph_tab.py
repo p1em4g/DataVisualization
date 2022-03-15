@@ -12,7 +12,7 @@ graph_tab = html.Div([
 ########################################################################## меню построения графиков
     html.Div([
 
-        dcc.Dropdown(                                                                   #dropdown из экспериментов
+        dcc.Dropdown(                                   #dropdown из экспериментов
             id="experiments_dropdown",
             placeholder='Select database',
             options=[

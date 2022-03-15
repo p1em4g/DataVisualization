@@ -1,6 +1,7 @@
 __pycache__
 venv
 .idea
-userData.py
+config.py
 test_file.py
 test.py
+config.py

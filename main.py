@@ -9,28 +9,35 @@ import mySQL_query
 from maths_F import approximation
 from sensors import sensors
 
-import json
-
 import dash_bootstrap_components as dbc
 
+from config import address_and_nodes, list_of_nodes
 from graph_tab import  graph_tab
 from cont_tab import cont_tab
 
 from plexus.utils.console_client_api import PlexusUserApi
 from plexus.nodes.message import Message
 
+from stend_control_command_creator import StendControlCommandCreator
 
 
 
 ###############################
-# list_of_nodes1 = [
-#         {"name": "node2", "address": "tcp://10.9.0.12:5567"}
-#         ]
-# client_addr = "tcp://10.9.0.7:5555"         # мой адресс
-# stend_control = PlexusUserApi(endpoint=client_addr, name="client2", list_of_nodes=list_of_nodes1)
+
+
+# stend_control = None
+# addr_decoded_ = None
+# decoded_resp_ = None
+
+list_of_nodes1 = [
+        {"name": "node2", "address": "tcp://10.9.0.12:5567"}
+        ]
+client_addr = "tcp://10.9.0.7:5555"         # мой адресс
+# stend_control = PlexusUserApi(endpoint=client_addr, name="client2223", list_of_nodes=list_of_nodes1)
 # message = Message(addr="node2", device ='node2', command='info')
 # addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
 
+sccc = StendControlCommandCreator(client_addr, list_of_nodes1, "node2")
 #############################
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -161,6 +168,26 @@ def createGraphs(n_clicks,selectedSensors,startTime,endTime, approxtrue, approxS
     return children
 
 # # Control Page 2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222
+# @app.callback(
+#     Input("connect_button", "n_clicks"),
+#     State("connect_input","value")
+# )
+# def create_stend_control(client_addr):
+#     client_name = "client{0}".format(client_addr)
+#     stend_control = PlexusUserApi(endpoint=client_addr, name=client_name, list_of_nodes=list_of_nodes)
+#     message = Message(addr="node2", device ='node2', command='info')
+#     addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
+
+@app.callback(
+    Output("node_dropdown",'options'),
+    Input('address_dropdown', "value")
+)
+def get_nodes(address):
+    if address != None:
+        options = [
+            {"label": x, "value": x} for x in address_and_nodes[address]
+        ]
+        return options
 
 @app.callback(
     Output('device_dropdown','options'),
@@ -168,7 +195,7 @@ def createGraphs(n_clicks,selectedSensors,startTime,endTime, approxtrue, approxS
 )
 def get_device(n_clicks):
     options = [
-        {'label': x, 'value': x} for x in decoded_resp_['data']['devices']
+        {'label': x, 'value': x} for x in sccc.get_devices_names()
     ]
     return options
 
@@ -177,27 +204,21 @@ def get_device(n_clicks):
     Output('command_dropdown','options'),
     Input("device_dropdown", "value"),
 )
-def get_device(device_dropdown_value):
+def get_commands(device_dropdown_value):
     if device_dropdown_value != None:
         options = [
-            {'label': x, 'value': x} for x in decoded_resp_['data']['devices'][device_dropdown_value]['commands']
+            {'label': x, 'value': x} for x in sccc.get_commands(device_dropdown_value)
         ]
         return options
 
 @app.callback(
     Output('command_arguments_input','value'),
-    # Inpuy("device_dropdown", "value"),
     Input("command_dropdown", "value"),
     State("device_dropdown", "value"),
 )
 def get_device(command,device_dropdown_value, ):
     if device_dropdown_value != None and command != None:
-        if decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs'] == None:
-            command_arguments_str = "None"
-        else:
-            command_arguments_str = "{0}\"{1}\": #{2}".format('{',str(list((decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs']).keys())[0]),'}')
-            # command_arguments_str = str(list((decoded_resp_['data']['devices'][device_dropdown_value]['commands'][command]['input_kwargs']).keys())[0])
-        return command_arguments_str
+        return sccc.get_arguments_str(device_dropdown_value, command)
 
 @app.callback(
     Output('output_textarea','value'),
@@ -207,29 +228,10 @@ def get_device(command,device_dropdown_value, ):
     State('command_arguments_input', "value")
 )
 def send_message(n_clicks, device, command, arguments: str):
-    try:
-        if device != None and command != None and arguments != None:
-            if arguments == 'None' or arguments == None:
-                data = None
-            else:
-                data = json.loads(arguments)
-            message = Message(addr="node2", device=device, command=command, data = data)
-            node_answer_raw = stend_control.send_msg(message)
-            node_addres, node_answer = Message.parse_zmq_msg(node_answer_raw)
-            return str(node_answer)
-    except:
-        return 'send message error'
+    return sccc.send_message(device, command, arguments)
 
 
 if __name__ == '__main__':
-    list_of_nodes1 = [
-        {"name": "node2", "address": "tcp://10.9.0.12:5567"}
-    ]
-    client_addr = "tcp://10.9.0.7:5567"  # мой адресс
-    stend_control = PlexusUserApi(endpoint=client_addr, name="client", list_of_nodes=list_of_nodes1)
-    addr_decoded_, decoded_resp_ = stend_control.get_full_node_info("node2")
-    # message = Message(addr="node2", device='node2', command='info')
-    # addr_decoded_, decoded_resp_ = Message.parse_zmq_msg(stend_control.send_msg(message))
     try:
         if __name__ == '__main__':
             app.run_server(debug=False)
